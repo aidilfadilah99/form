@@ -1,39 +1,80 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>Form Input Data</title>
+  <title>Form Update Data</title>
   <meta charset="UTF-8">
 </head>
 <body>
-  <h2>Form Input Data</h2>
-
-  <form id="data-form">
-    <label>Nama:</label><br>
-    <input type="text" name="nama" required><br><br>
-
-    <label>Umur:</label><br>
-    <input type="number" name="umur" required><br><br>
-
-    <button type="submit">Kirim</button>
+  <h2>Cari Data untuk Update</h2>
+  <form id="search-form">
+    <label>Nama:</label>
+    <input type="text" name="searchNama" required>
+    <button type="submit">Cari</button>
   </form>
 
+  <div id="update-section" style="display:none; margin-top: 20px;">
+    <h3>Update Data</h3>
+    <form id="update-form">
+      <input type="hidden" name="id">
+      <label>Nama:</label>
+      <input type="text" name="nama" required><br><br>
+
+      <label>Umur:</label>
+      <input type="number" name="umur" required><br><br>
+
+      <button type="submit">Update</button>
+    </form>
+  </div>
+
   <script>
-    const scriptURL = "https://script.google.com/macros/s/AKfycby0BMxT8GWmgbae0muP_PG9xl-pQG3sLEugh9hakOHXsM8JwQ2bNmWMQrrbUhVBGOmS/exec"; // ← ganti di sini
+    const scriptURL = 'https://script.google.com/macros/s/AKfycby0BMxT8GWmgbae0muP_PG9xl-pQG3sLEugh9hakOHXsM8JwQ2bNmWMQrrbUhVBGOmS/exec'; // ← Ganti dengan URL Web App kamu
 
-    const form = document.getElementById("data-form");
+    const searchForm = document.getElementById('search-form');
+    const updateForm = document.getElementById('update-form');
+    const updateSection = document.getElementById('update-section');
 
-    form.addEventListener("submit", e => {
+    // Cari Data
+    searchForm.addEventListener('submit', e => {
       e.preventDefault();
-      const formData = new FormData(form);
+      const nama = searchForm.searchNama.value;
 
-      fetch(scriptURL, { method: 'POST', body: formData })
-        .then(response => {
-          alert("Data berhasil dikirim!");
-          form.reset();
+      fetch(`${scriptURL}?action=get&nama=${encodeURIComponent(nama)}`)
+        .then(response => response.json())
+        .then(data => {
+          if (data && data.id) {
+            updateSection.style.display = 'block';
+            updateForm.id.value = data.id;
+            updateForm.nama.value = data.nama;
+            updateForm.umur.value = data.umur;
+          } else {
+            alert("Data tidak ditemukan.");
+            updateSection.style.display = 'none';
+          }
         })
         .catch(error => {
-          alert("Terjadi kesalahan!");
-          console.error("Error!", error.message);
+          console.error('Error:', error);
+        });
+    });
+
+    // Update Data
+    updateForm.addEventListener('submit', e => {
+      e.preventDefault();
+      const formData = new FormData(updateForm);
+      formData.append("action", "update");
+
+      fetch(scriptURL, {
+        method: 'POST',
+        body: formData
+      })
+        .then(res => res.text())
+        .then(response => {
+          alert("Data berhasil diperbarui!");
+          updateForm.reset();
+          updateSection.style.display = 'none';
+        })
+        .catch(error => {
+          alert("Gagal update!");
+          console.error('Error!', error.message);
         });
     });
   </script>
