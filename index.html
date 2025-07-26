@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Form Input Data</title>
+  <meta charset="UTF-8">
+</head>
+<body>
+  <h2>Form Input Data</h2>
+
+  <form id="data-form">
+    <label>Nama:</label><br>
+    <input type="text" name="nama" required><br><br>
+
+    <label>Umur:</label><br>
+    <input type="number" name="umur" required><br><br>
+
+    <button type="submit">Kirim</button>
+  </form>
+
+  <script>
+    const scriptURL = "https://script.google.com/macros/s/AKfycby0BMxT8GWmgbae0muP_PG9xl-pQG3sLEugh9hakOHXsM8JwQ2bNmWMQrrbUhVBGOmS/exec"; // ← ganti di sini
+
+    const form = document.getElementById("data-form");
+
+    form.addEventListener("submit", e => {
+      e.preventDefault();
+      const formData = new FormData(form);
+
+      fetch(scriptURL, { method: 'POST', body: formData })
+        .then(response => {
+          alert("Data berhasil dikirim!");
+          form.reset();
+        })
+        .catch(error => {
+          alert("Terjadi kesalahan!");
+          console.error("Error!", error.message);
+        });
+    });
+  </script>
+</body>
+</html>
