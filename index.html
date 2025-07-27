@@ -6,7 +6,17 @@
   <style>
     body { font-family: Arial; max-width: 600px; margin: auto; padding: 20px; }
     input, button { display: block; margin: 10px 0; width: 100%; padding: 8px; }
-    #updateBtn, #formUpdate, #idField { display: none; }
+    #formUpdate, #idField { display: none; }
+    #hasilPencarian button {
+      text-align: left;
+      margin-bottom: 5px;
+      background-color: #f1f1f1;
+      border: 1px solid #ccc;
+      cursor: pointer;
+    }
+    #hasilPencarian button:hover {
+      background-color: #ddd;
+    }
   </style>
 </head>
 <body>
@@ -23,6 +33,7 @@
   <h3>Cari dan Update Data</h3>
   <input type="text" id="searchNama" placeholder="Masukkan nama">
   <button onclick="cariData()">Cari</button>
+  <div id="hasilPencarian"></div>
 
   <!-- FORM UPDATE DATA -->
   <form id="formUpdate">
@@ -46,29 +57,41 @@
       fetch(scriptURL, { method: 'POST', body: formData })
         .then(res => res.text())
         .then(res => {
-          alert(res.includes("berhasil") ? "Data berhasil dikirim!" : "Gagal mengirim data.");
+          alert("Data berhasil dikirim!");
           document.getElementById('dataForm').reset();
         });
     });
 
-    // Cari data
+    // Cari data nama dan tampilkan list
     function cariData() {
       const nama = document.getElementById("searchNama").value;
-      fetch(`${scriptURL}?action=get&nama=${encodeURIComponent(nama)}`)
+      const hasilDiv = document.getElementById("hasilPencarian");
+      hasilDiv.innerHTML = "Mencari...";
+      fetch(`${scriptURL}?action=list&nama=${encodeURIComponent(nama)}`)
         .then(res => res.json())
         .then(res => {
-          if (res.success) {
-            const data = res.data;
-            document.getElementById("idField").value = data.id;
-            document.getElementById("editNama").value = data.nama;
-            document.getElementById("editUmur").value = data.umur;
-            document.getElementById("formUpdate").style.display = "block";
-            document.getElementById("updateBtn").style.display = "block";
+          hasilDiv.innerHTML = "";
+          if (res.success && res.data.length > 0) {
+            res.data.forEach(item => {
+              const btn = document.createElement("button");
+              btn.textContent = `ID: ${item.id} | Nama: ${item.nama} | Umur: ${item.umur}`;
+              btn.onclick = () => isiFormUpdate(item);
+              hasilDiv.appendChild(btn);
+            });
           } else {
-            alert("Data tidak ditemukan.");
+            hasilDiv.innerHTML = "<p>Data tidak ditemukan.</p>";
             document.getElementById("formUpdate").style.display = "none";
           }
         });
+    }
+
+    // Isi form update dari tombol klik hasil pencarian
+    function isiFormUpdate(data) {
+      document.getElementById("idField").value = data.id;
+      document.getElementById("editNama").value = data.nama;
+      document.getElementById("editUmur").value = data.umur;
+      document.getElementById("formUpdate").style.display = "block";
+      document.getElementById("updateBtn").style.display = "block";
     }
 
     // Update data
@@ -82,9 +105,10 @@
       fetch(scriptURL, { method: 'POST', body: formData })
         .then(res => res.text())
         .then(res => {
-          alert(res.includes("berhasil") ? "Data berhasil diperbarui!" : "Gagal memperbarui data.");
+          alert("Data berhasil diperbarui!");
           document.getElementById("formUpdate").reset();
           document.getElementById("formUpdate").style.display = "none";
+          document.getElementById("hasilPencarian").innerHTML = "";
         });
     }
   </script>
