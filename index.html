@@ -1,104 +1,107 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>Form Input dan Update Data</title>
+  <title>Form Data</title>
   <meta charset="UTF-8">
+  <style>
+    body { font-family: Arial; max-width: 600px; margin: auto; padding: 20px; }
+    input, button { display: block; margin: 10px 0; width: 100%; padding: 8px; }
+    #updateBtn, #formUpdate, #idField { display: none; }
+  </style>
 </head>
 <body>
-  <h2>Tambah Data</h2>
-  <form id="add-form">
-    <label>Nama:</label><br>
-    <input type="text" name="nama" required><br><br>
-    <label>Umur:</label><br>
-    <input type="number" name="umur" required><br><br>
+  <h2>Form Input Data</h2>
+  
+  <!-- FORM INPUT DATA -->
+  <form id="dataForm">
+    <input type="text" id="nama" placeholder="Nama" required>
+    <input type="number" id="umur" placeholder="Umur" required>
+    <input type="text" id="alamat" placeholder="Alamat" required>
     <button type="submit">Kirim</button>
   </form>
 
-  <hr>
+  <!-- FORM CARI -->
+  <h3>Cari dan Update Data</h3>
+  <input type="text" id="searchNama" placeholder="Masukkan nama">
+  <button onclick="cariData()">Cari</button>
 
-  <h2>Update Data</h2>
-  <form id="search-form">
-    <label>Cari Nama:</label><br>
-    <input type="text" id="search-nama" required>
-    <button type="submit">Cari</button>
-  </form>
-
-  <form id="update-form" style="display:none; margin-top:20px;">
-    <input type="hidden" name="id" id="update-id">
-    <label>Nama:</label><br>
-    <input type="text" name="nama" id="update-nama" required><br><br>
-    <label>Umur:</label><br>
-    <input type="number" name="umur" id="update-umur" required><br><br>
-    <button type="submit">Update</button>
+  <!-- FORM UPDATE DATA -->
+  <form id="formUpdate">
+    <input type="hidden" id="idField">
+    <input type="text" id="editNama" placeholder="Nama" required>
+    <input type="number" id="editUmur" placeholder="Umur" required>
+    <input type="text" id="editAlamat" placeholder="Alamat" required>
+    <button type="button" id="updateBtn" onclick="updateData()">Update</button>
   </form>
 
   <script>
-    const scriptURL = "https://script.google.com/macros/s/AKfycby0BMxT8GWmgbae0muP_PG9xl-pQG3sLEugh9hakOHXsM8JwQ2bNmWMQrrbUhVBGOmS/exec"; // Ganti ini!
+    const scriptURL = "https://script.google.com/macros/s/AKfycby0BMxT8GWmgbae0muP_PG9xl-pQG3sLEugh9hakOHXsM8JwQ2bNmWMQrrbUhVBGOmS/exec";
 
-    // Tambah Data
-    document.getElementById("add-form").addEventListener("submit", e => {
+    // Kirim data baru
+    document.getElementById('dataForm').addEventListener('submit', function(e) {
       e.preventDefault();
-      const formData = new FormData(e.target);
-      formData.append("action", "add");
-
+      const data = {
+        action: "add",
+        nama: document.getElementById("nama").value,
+        umur: document.getElementById("umur").value,
+        alamat: document.getElementById("alamat").value
+      };
       fetch(scriptURL, {
         method: 'POST',
-        body: formData
+        body: JSON.stringify(data),
+        headers: { 'Content-Type': 'application/json' }
       })
-      .then(() => {
-        alert("Data berhasil ditambahkan!");
-        e.target.reset();
-      })
-      .catch(err => {
-        alert("Gagal menambahkan data.");
-        console.error(err);
+      .then(res => res.json())
+      .then(res => {
+        if (res.success) alert("Data berhasil dikirim!");
+        else alert("Gagal mengirim data.");
+        document.getElementById('dataForm').reset();
       });
     });
 
-    // Cari Data
-    document.getElementById("search-form").addEventListener("submit", e => {
-      e.preventDefault();
-      const nama = document.getElementById("search-nama").value;
-
-      fetch(`${scriptURL}?action=get&nama=${encodeURIComponent(nama)}`)
-        .then(res => res.text())
-        .then(text => {
-          if (text === "NOT_FOUND") {
-            alert("Data tidak ditemukan.");
+    // Cari data
+    function cariData() {
+      const nama = document.getElementById("searchNama").value;
+      fetch(`${scriptURL}?nama=${encodeURIComponent(nama)}`)
+        .then(res => res.json())
+        .then(res => {
+          if (res.success) {
+            const data = res.data;
+            document.getElementById("idField").value = data.id;
+            document.getElementById("editNama").value = data.nama;
+            document.getElementById("editUmur").value = data.umur;
+            document.getElementById("editAlamat").value = data.alamat;
+            document.getElementById("formUpdate").style.display = "block";
+            document.getElementById("updateBtn").style.display = "block";
           } else {
-            const data = JSON.parse(text);
-            document.getElementById("update-id").value = data.id;
-            document.getElementById("update-nama").value = data.nama;
-            document.getElementById("update-umur").value = data.umur;
-            document.getElementById("update-form").style.display = "block";
+            alert("Data tidak ditemukan.");
+            document.getElementById("formUpdate").style.display = "none";
           }
-        })
-        .catch(err => {
-          alert("Gagal mencari data.");
-          console.error(err);
         });
-    });
+    }
 
-    // Update Data
-    document.getElementById("update-form").addEventListener("submit", e => {
-      e.preventDefault();
-      const formData = new FormData(e.target);
-      formData.append("action", "update");
-
+    // Update data
+    function updateData() {
+      const data = {
+        action: "update",
+        id: document.getElementById("idField").value,
+        nama: document.getElementById("editNama").value,
+        umur: document.getElementById("editUmur").value,
+        alamat: document.getElementById("editAlamat").value
+      };
       fetch(scriptURL, {
         method: 'POST',
-        body: formData
+        body: JSON.stringify(data),
+        headers: { 'Content-Type': 'application/json' }
       })
-      .then(() => {
-        alert("Data berhasil diupdate!");
-        e.target.style.display = "none";
-        document.getElementById("search-nama").value = "";
-      })
-      .catch(err => {
-        alert("Gagal update data.");
-        console.error(err);
+      .then(res => res.json())
+      .then(res => {
+        if (res.success) alert("Data berhasil diperbarui!");
+        else alert("Gagal memperbarui data.");
+        document.getElementById("formUpdate").reset();
+        document.getElementById("formUpdate").style.display = "none";
       });
-    });
+    }
   </script>
 </body>
 </html>
